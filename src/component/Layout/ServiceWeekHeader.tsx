@@ -8,10 +8,9 @@ interface HeaderProps {
 }
 
 export const ServiceWeekHeader: React.FC<HeaderProps> = ({
-  title = 'URITHI PORTAL',
+  title = 'SERVICE WEEK',
   subtitle = 'THE JUDICIARY',
-  userName = 'Admin User',
-  userRole = 'Super Admin',
+  userName = 'welcome',
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -42,7 +41,6 @@ export const ServiceWeekHeader: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-3">
         <div className="text-right hidden sm:block">
           <p className="text-sm font-semibold">{userName}</p>
-          <p className="text-xs text-[#C48B28] font-medium">{userRole}</p>
         </div>
         <div className="w-10 h-10 bg-[#C48B28]/20 border border-[#C48B28] rounded-full flex items-center justify-center font-bold text-sm text-[#C48B28]">
           {userName.charAt(0)}
