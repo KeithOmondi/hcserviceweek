@@ -19,6 +19,7 @@ import {
 import { SERVICE_WEEK_STATUS_COLORS, SERVICE_WEEK_STATUS_LABELS, type ServiceWeekStatus } from '../types/service-week.types';
 import type { AppDispatch } from '../store/store';
 import type { ServiceWeekFilters } from '../types/service-week.types';
+import { FiPlus, FiSearch, FiEye, FiEdit2, FiTrash2, FiDownload, FiCheckCircle } from 'react-icons/fi';
 
 const STATUS_OPTIONS: { value: ServiceWeekStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All Status' },
@@ -103,173 +104,215 @@ const ServiceWeekPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#163328] p-6 rounded-2xl shadow-sm text-white gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-[#C48B28]">Service Week Reports</h2>
-          <p className="text-emerald-100/80 text-sm mt-1">Manage and submit service week case returns</p>
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header Banner */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#163328] p-5 sm:p-6 rounded-2xl shadow-sm text-white gap-4">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-[#C48B28]">Service Week Reports</h2>
+            <p className="text-emerald-100/80 text-sm mt-1">Manage and submit service week case returns</p>
+          </div>
+          <button
+            onClick={() => navigate('/staff/service-week/new')}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#C48B28] text-white font-semibold rounded-xl hover:bg-[#A8741E] transition-all shadow-md active:scale-95"
+          >
+            <FiPlus className="w-4 h-4" />
+            New Entry
+          </button>
         </div>
-        <button
-          onClick={() => navigate('/staff/service-week/new')}
-          className="px-5 py-2.5 bg-[#C48B28] text-white font-semibold rounded-xl hover:bg-[#A8741E] transition-all shadow-md active:scale-95"
-        >
-          + New Entry
-        </button>
-      </div>
 
-      {/* Error Banner */}
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">
-          {error}
+        {/* Error Banner */}
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">
+            {error}
+          </div>
+        )}
+
+        {/* Filters Bar */}
+        <div className="flex flex-wrap items-center gap-3 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value as ServiceWeekStatus | 'all')}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-[#C48B28] focus:border-transparent outline-none bg-gray-50"
+          >
+            {STATUS_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+
+          <div className="relative flex-1 min-w-[150px]">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search station..."
+              value={searchStation}
+              onChange={(e) => setSearchStation(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-[#C48B28] focus:border-transparent outline-none bg-gray-50"
+            />
+          </div>
+
+          <div className="relative flex-1 min-w-[150px]">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search judge..."
+              value={searchJudge}
+              onChange={(e) => setSearchJudge(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-[#C48B28] focus:border-transparent outline-none bg-gray-50"
+            />
+          </div>
+
+          <span className="text-sm text-gray-500 font-medium ml-auto">
+            Showing {reports.length} of {pagination.total} report(s)
+          </span>
         </div>
-      )}
 
-      {/* Filters Bar */}
-      <div className="flex flex-wrap gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value as ServiceWeekStatus | 'all')}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-[#C48B28] focus:border-transparent outline-none bg-gray-50"
-        >
-          {STATUS_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-
-        <input
-          type="text"
-          placeholder="Search station..."
-          value={searchStation}
-          onChange={(e) => setSearchStation(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-[#C48B28] focus:border-transparent outline-none bg-gray-50"
-        />
-
-        <input
-          type="text"
-          placeholder="Search judge..."
-          value={searchJudge}
-          onChange={(e) => setSearchJudge(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-[#C48B28] focus:border-transparent outline-none bg-gray-50"
-        />
-
-        <span className="text-sm text-gray-500 self-center ml-auto font-medium">
-          Showing {reports.length} of {pagination.total} report(s)
-        </span>
-      </div>
-
-      {/* Reports Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-[#163328] text-white">
-              <tr>
-                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Station</th>
-                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Judge</th>
-                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Week</th>
-                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Cases</th>
-                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3.5 text-center text-xs font-semibold uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {reports.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
-                    No reports found
-                  </td>
+        {/* Reports Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-[#163328] text-white">
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Station</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Judge</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Week</th>
+                  <th className="px-4 py-3.5 text-center text-xs font-semibold uppercase tracking-wider">Cases</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3.5 text-center text-xs font-semibold uppercase tracking-wider">Actions</th>
                 </tr>
-              ) : (
-                reports.map((report) => (
-                  <tr key={report.id} className="hover:bg-amber-50/40 transition-colors">
-                    <td className="px-4 py-3 font-semibold text-gray-900">
-                      {report.station}
-                      {report.division && <span className="text-gray-400 text-xs ml-1 font-normal">({report.division})</span>}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">{report.judge_name}</td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {new Date(report.week_start).toLocaleDateString()} – {new Date(report.week_end).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700 font-medium">{report.cases?.length || 0}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${SERVICE_WEEK_STATUS_COLORS[report.status]}`}>
-                        {SERVICE_WEEK_STATUS_LABELS[report.status]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                        {/* Edit - only for draft */}
-                        {report.status === 'draft' && (
-                          <button
-                            onClick={() => navigate(`/staff/service-week/${report.id}/edit`)}
-                            className="px-2.5 py-1 bg-slate-700 text-white text-xs font-medium rounded-lg hover:bg-slate-800 transition-colors"
-                          >
-                            Edit
-                          </button>
-                        )}
-
-                        {/* Submit - only for draft */}
-                        {report.status === 'draft' && (
-                          <button
-                            onClick={() => handleSubmit(report.id)}
-                            disabled={isSubmitting}
-                            className="px-2.5 py-1 bg-[#163328] text-white text-xs font-medium rounded-lg hover:bg-[#0f241c] disabled:opacity-50 transition-colors"
-                          >
-                            Submit
-                          </button>
-                        )}
-
-                        {/* Delete - only for draft */}
-                        {report.status === 'draft' && (
-                          <button
-                            onClick={() => handleDelete(report.id)}
-                            className="px-2.5 py-1 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        )}
-
-                        {/* Download PDF */}
-                        <button
-                          onClick={() => handleDownloadPDF(report.id, report.station)}
-                          className="px-2.5 py-1 bg-[#C48B28] text-white text-xs font-medium rounded-lg hover:bg-[#A8741E] transition-colors"
-                        >
-                          PDF
-                        </button>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {reports.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
+                      <div className="flex flex-col items-center gap-2">
+                        <FiSearch className="w-8 h-8 text-gray-300" />
+                        <p>No reports found</p>
+                        <p className="text-xs text-gray-400">Try adjusting your filters or create a new entry</p>
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                ) : (
+                  reports.map((report) => (
+                    <tr key={report.id} className="hover:bg-amber-50/40 transition-colors">
+                      <td className="px-4 py-3.5">
+                        <div>
+                          <div className="font-semibold text-gray-900">{report.station}</div>
+                          {report.division && (
+                            <div className="text-gray-400 text-xs">{report.division}</div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5 text-gray-700 font-medium">{report.judge_name}</td>
+                      <td className="px-4 py-3.5 text-gray-600">
+                        <div className="flex flex-col">
+                          <span>{new Date(report.week_start).toLocaleDateString()}</span>
+                          <span className="text-gray-400 text-xs">to</span>
+                          <span>{new Date(report.week_end).toLocaleDateString()}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5 text-center">
+                        <span className="inline-flex items-center justify-center w-8 h-8 bg-[#163328]/10 text-[#163328] font-semibold rounded-full">
+                          {report.cases?.length || 0}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full ${SERVICE_WEEK_STATUS_COLORS[report.status]}`}>
+                          {report.status === 'submitted' && <FiCheckCircle className="w-3 h-3" />}
+                          {SERVICE_WEEK_STATUS_LABELS[report.status]}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                          {/* View - always available */}
+                          <button
+                            onClick={() => navigate(`/staff/service-week/${report.id}`)}
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="View"
+                          >
+                            <FiEye className="w-4 h-4" />
+                          </button>
 
-      {/* Pagination */}
-      {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border border-gray-200 px-6 py-3">
-          <div className="text-sm text-gray-500 font-medium">
-            Showing page {pagination.page} of {pagination.totalPages}
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handlePageChange(pagination.page - 1)}
-              disabled={pagination.page <= 1}
-              className="px-3.5 py-1.5 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => handlePageChange(pagination.page + 1)}
-              disabled={pagination.page >= pagination.totalPages}
-              className="px-3.5 py-1.5 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700"
-            >
-              Next
-            </button>
+                          {/* Edit - only for draft */}
+                          {report.status === 'draft' && (
+                            <button
+                              onClick={() => navigate(`/staff/service-week/${report.id}/edit`)}
+                              className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                              title="Edit"
+                            >
+                              <FiEdit2 className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          {/* Submit - only for draft */}
+                          {report.status === 'draft' && (
+                            <button
+                              onClick={() => handleSubmit(report.id)}
+                              disabled={isSubmitting}
+                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50"
+                              title="Submit"
+                            >
+                              <FiCheckCircle className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          {/* Delete - only for draft */}
+                          {report.status === 'draft' && (
+                            <button
+                              onClick={() => handleDelete(report.id)}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <FiTrash2 className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          {/* Download PDF - always available */}
+                          <button
+                            onClick={() => handleDownloadPDF(report.id, report.station)}
+                            className="p-1.5 text-[#C48B28] hover:bg-[#C48B28]/10 rounded-lg transition-colors"
+                            title="Download PDF"
+                          >
+                            <FiDownload className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-      )}
+
+        {/* Pagination */}
+        {pagination.totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white rounded-xl shadow-sm border border-gray-200 px-4 sm:px-6 py-3">
+            <div className="text-sm text-gray-500 font-medium">
+              Page {pagination.page} of {pagination.totalPages}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={pagination.page <= 1}
+                className="px-4 py-1.5 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 transition-colors"
+              >
+                Previous
+              </button>
+              <span className="px-3 py-1.5 text-sm font-medium bg-[#163328] text-white rounded-lg">
+                {pagination.page}
+              </span>
+              <button
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={pagination.page >= pagination.totalPages}
+                className="px-4 py-1.5 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
