@@ -144,8 +144,6 @@ const ReportDetailView: React.FC<{ report: ServiceWeekReport }> = ({ report }) =
 
       {/* Dates */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <ReadOnlyField label="Week Start" value={fmtDate(report.week_start)} />
-        <ReadOnlyField label="Week End" value={fmtDate(report.week_end)} />
         <ReadOnlyField label="Report Date" value={fmtDate(report.date)} />
       </div>
 
