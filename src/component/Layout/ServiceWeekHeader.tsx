@@ -55,7 +55,7 @@ interface HeaderProps {
 }
 
 export const ServiceWeekHeader: React.FC<HeaderProps> = ({
-  title = 'SERVICE WEEK',
+  title = 'ORHC SERVICE WEEK RETURN TEMPLATE',
   subtitle = 'THE JUDICIARY',
   userName = 'welcome',
   onMenuToggle,
@@ -91,7 +91,7 @@ export const ServiceWeekHeader: React.FC<HeaderProps> = ({
           <p className="text-[#C48B28] text-[8px] sm:text-[10px] md:text-xs font-semibold tracking-widest uppercase truncate">
             {subtitle}
           </p>
-          <h1 className="text-base sm:text-xl md:text-2xl font-extrabold tracking-tight truncate">
+          <h1 className="text-base font-serif sm:text-xl md:text-2xl font-extrabold tracking-tight truncate">
             {title}
           </h1>
         </div>

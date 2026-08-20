@@ -18,6 +18,20 @@ import type {
 } from '../types/service-week.types';
 import type { AppDispatch } from '../store/store';
 
+// ─── Outcome options ──────────────────────────────────────────────────────────
+const OUTCOME_OPTIONS = [
+  { value: 'judgement', label: 'Judgement' },
+  { value: 'mention', label: 'Mention' },
+  { value: 'withdrawal', label: 'Withdrawal' },
+  { value: 'settled', label: 'Settled' },
+  { value: 'other', label: 'Other' },
+] as const;
+
+export type OutcomeValue = typeof OUTCOME_OPTIONS[number]['value'];
+
+// ─── Check if a value is "other" ─────────────────────────────────────────────
+const isOtherOutcome = (value: string): boolean => value === 'other';
+
 const initialCase: CaseReturnFormValues = {
   serial_number: '',
   case_number: '',
@@ -136,6 +150,16 @@ const ServiceWeekFormInner: React.FC<{
 
   const [formData, setFormData] = useState<ServiceWeekFormValues>(() => initialValues);
   const [saveAsDraft, setSaveAsDraft] = useState(true);
+  // Track which rows have "other" selected to show/hide the input box
+  const [isOtherSelected, setIsOtherSelected] = useState<Record<number, boolean>>(() => {
+    const initial: Record<number, boolean> = {};
+    initialValues.cases.forEach((c, index) => {
+      if (isOtherOutcome(c.outcome)) {
+        initial[index] = true;
+      }
+    });
+    return initial;
+  });
 
   const updateField = <K extends keyof ServiceWeekFormValues>(
     field: K,
@@ -150,11 +174,38 @@ const ServiceWeekFormInner: React.FC<{
     setFormData((prev) => ({ ...prev, cases: updatedCases }));
   };
 
+  const handleOutcomeChange = (index: number, value: string) => {
+    // Update the outcome value
+    updateCase(index, 'outcome', value);
+    
+    // Track if "other" is selected for this row
+    setIsOtherSelected((prev) => ({
+      ...prev,
+      [index]: value === 'other',
+    }));
+
+    // If not "other", clear any custom text (it will be stored in outcome as the selected value)
+    if (value !== 'other') {
+      // The outcome field already has the selected value
+      updateCase(index, 'outcome', value);
+    } else {
+      // When "other" is selected, set outcome to empty string initially
+      // User will type their custom outcome
+      updateCase(index, 'outcome', '');
+    }
+  };
+
+  const handleOtherInputChange = (index: number, value: string) => {
+    // Store the custom text in the outcome field
+    updateCase(index, 'outcome', value);
+  };
+
   const addCase = () => {
     setFormData((prev) => ({
       ...prev,
       cases: [...prev.cases, { ...initialCase, serial_number: prev.cases.length + 1 }],
     }));
+    // New row doesn't have "other" selected
   };
 
   const removeCase = (index: number) => {
@@ -162,6 +213,18 @@ const ServiceWeekFormInner: React.FC<{
     const updated = formData.cases.filter((_, i) => i !== index);
     const renumbered = updated.map((c, i) => ({ ...c, serial_number: i + 1 }));
     setFormData((prev) => ({ ...prev, cases: renumbered }));
+    
+    // Clean up the isOtherSelected state
+    setIsOtherSelected((prev) => {
+      const newState = { ...prev };
+      delete newState[index];
+      // Re-index the remaining items
+      const reindexed: Record<number, boolean> = {};
+      Object.keys(newState).forEach((key, i) => {
+        reindexed[i] = newState[Number(key)];
+      });
+      return reindexed;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -170,6 +233,15 @@ const ServiceWeekFormInner: React.FC<{
     if (formData.cases.length === 0) {
       alert('Please add at least one case');
       return;
+    }
+
+    // Validate that all cases have an outcome (if "other" is selected, check it's not empty)
+    for (let i = 0; i < formData.cases.length; i++) {
+      const c = formData.cases[i];
+      if (!c.outcome || c.outcome.trim() === '') {
+        alert(`Case #${i + 1} is missing an outcome. Please select or enter an outcome.`);
+        return;
+      }
     }
 
     const payload = {
@@ -230,7 +302,7 @@ const ServiceWeekFormInner: React.FC<{
     <form id="serviceWeekForm" onSubmit={handleSubmit} className="max-w-5xl mx-auto space-y-6">
       <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-6">
         <h2 className="text-lg font-bold text-[#1E4620] mb-4">
-          {isEdit ? 'Edit Service Week Report' : 'New Service Week Report'}
+          {isEdit ? 'Edit Service Week Report' : 'DAILY SERVICE WEEK RETURN FORM'}
         </h2>
 
         {error && (
@@ -324,63 +396,91 @@ const ServiceWeekFormInner: React.FC<{
             </thead>
             <tbody className="divide-y divide-gray-200">
               {formData.cases.map((caseItem, index) => (
-                <tr key={index}>
-                  <td className="px-2 py-2">
-                    <input
-                      type="number"
-                      value={caseItem.serial_number}
-                      onChange={(e) => updateCase(index, 'serial_number', Number(e.target.value))}
-                      className="w-full border border-stone-300 rounded px-1 py-1 text-sm"
-                      min="1"
-                    />
-                  </td>
-                  <td className="px-2 py-2">
-                    <input
-                      type="text"
-                      value={caseItem.case_number}
-                      onChange={(e) => updateCase(index, 'case_number', e.target.value)}
-                      className="w-full border border-stone-300 rounded px-2 py-1 text-sm"
-                      placeholder="e.g. HCCRA/E082/2024"
-                    />
-                  </td>
-                  <td className="px-2 py-2">
-                    <input
-                      type="text"
-                      value={caseItem.cause_listed_activity}
-                      onChange={(e) => updateCase(index, 'cause_listed_activity', e.target.value)}
-                      className="w-full border border-stone-300 rounded px-2 py-1 text-sm"
-                      placeholder="e.g. Mention"
-                    />
-                  </td>
-                  <td className="px-2 py-2">
-                    <input
-                      type="text"
-                      value={caseItem.outcome}
-                      onChange={(e) => updateCase(index, 'outcome', e.target.value)}
-                      className="w-full border border-stone-300 rounded px-2 py-1 text-sm"
-                      placeholder="e.g. Judgment"
-                    />
-                  </td>
-                  <td className="px-2 py-2">
-                    <input
-                      type="text"
-                      value={caseItem.remarks}
-                      onChange={(e) => updateCase(index, 'remarks', e.target.value)}
-                      className="w-full border border-stone-300 rounded px-2 py-1 text-sm"
-                      placeholder="Optional remarks"
-                    />
-                  </td>
-                  <td className="px-2 py-2 text-center">
-                    <button
-                      type="button"
-                      onClick={() => removeCase(index)}
-                      className="text-red-600 hover:text-red-800 text-xs font-medium"
-                      disabled={formData.cases.length <= 1}
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
+                <React.Fragment key={index}>
+                  <tr>
+                    <td className="px-2 py-2">
+                      <input
+                        type="number"
+                        value={caseItem.serial_number}
+                        onChange={(e) => updateCase(index, 'serial_number', Number(e.target.value))}
+                        className="w-full border border-stone-300 rounded px-1 py-1 text-sm"
+                        min="1"
+                      />
+                    </td>
+                    <td className="px-2 py-2">
+                      <input
+                        type="text"
+                        value={caseItem.case_number}
+                        onChange={(e) => updateCase(index, 'case_number', e.target.value)}
+                        className="w-full border border-stone-300 rounded px-2 py-1 text-sm"
+                        placeholder="e.g. HCCRA/E082/2024"
+                      />
+                    </td>
+                    <td className="px-2 py-2">
+                      <input
+                        type="text"
+                        value={caseItem.cause_listed_activity}
+                        onChange={(e) => updateCase(index, 'cause_listed_activity', e.target.value)}
+                        className="w-full border border-stone-300 rounded px-2 py-1 text-sm"
+                        placeholder="e.g. Mention"
+                      />
+                    </td>
+                    <td className="px-2 py-2">
+                      <select
+                        value={isOtherSelected[index] ? 'other' : caseItem.outcome}
+                        onChange={(e) => handleOutcomeChange(index, e.target.value)}
+                        className="w-full border border-stone-300 rounded px-2 py-1 text-sm bg-white"
+                      >
+                        <option value="">Select outcome...</option>
+                        {OUTCOME_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-2 py-2">
+                      <input
+                        type="text"
+                        value={caseItem.remarks}
+                        onChange={(e) => updateCase(index, 'remarks', e.target.value)}
+                        className="w-full border border-stone-300 rounded px-2 py-1 text-sm"
+                        placeholder="Optional remarks"
+                      />
+                    </td>
+                    <td className="px-2 py-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => removeCase(index)}
+                        className="text-red-600 hover:text-red-800 text-xs font-medium"
+                        disabled={formData.cases.length <= 1}
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                  {/* ─── "Other" input row ───────────────────────────────────── */}
+                  {isOtherSelected[index] && (
+                    <tr className="bg-amber-50/50">
+                      <td colSpan={2} className="px-2 py-1.5 text-right">
+                        <span className="text-xs font-medium text-amber-700">Other Outcome:</span>
+                      </td>
+                      <td colSpan={3} className="px-2 py-1.5">
+                        <input
+                          type="text"
+                          value={caseItem.outcome}
+                          onChange={(e) => handleOtherInputChange(index, e.target.value)}
+                          placeholder="Please specify the outcome..."
+                          className="w-full border border-amber-300 rounded px-2 py-1 text-sm bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                          autoFocus
+                        />
+                      </td>
+                      <td className="px-2 py-1.5 text-center">
+                        <span className="text-xs text-amber-600">✏️</span>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
