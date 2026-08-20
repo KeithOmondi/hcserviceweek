@@ -26,14 +26,6 @@ export interface ServiceWeekReport {
   prepared_designation: string;
   prepared_signature?: string;
   prepared_date?: string;
-  confirmed_by?: string;
-  confirmed_designation?: string;
-  confirmed_signature?: string;
-  confirmed_date?: string;
-  approved_by?: string;
-  approved_designation?: string;
-  approved_signature?: string;
-  approved_date?: string;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -51,12 +43,6 @@ export interface CreateServiceWeekPayload {
   prepared_by: string;
   prepared_designation: string;
   prepared_date?: string;
-  confirmed_by?: string;
-  confirmed_designation?: string;
-  confirmed_date?: string;
-  approved_by?: string;
-  approved_designation?: string;
-  approved_date?: string;
   saveAsDraft?: boolean;
 }
 
@@ -71,12 +57,6 @@ export interface UpdateServiceWeekPayload {
   prepared_by?: string;
   prepared_designation?: string;
   prepared_date?: string;
-  confirmed_by?: string;
-  confirmed_designation?: string;
-  confirmed_date?: string;
-  approved_by?: string;
-  approved_designation?: string;
-  approved_date?: string;
   status?: ServiceWeekStatus;
 }
 
@@ -146,12 +126,6 @@ export interface ServiceWeekFormValues {
   prepared_by: string;
   prepared_designation: string;
   prepared_date: string;
-  confirmed_by: string;
-  confirmed_designation: string;
-  confirmed_date: string;
-  approved_by: string;
-  approved_designation: string;
-  approved_date: string;
 }
 
 export interface CaseReturnFormValues {

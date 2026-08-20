@@ -1,4 +1,5 @@
 // src/pages/ServiceWeekForm.tsx
+
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -17,6 +18,7 @@ import type {
   ServiceWeekReport,
 } from '../types/service-week.types';
 import type { AppDispatch } from '../store/store';
+//import type { SerializedError } from '@reduxjs/toolkit';
 
 // ─── Outcome options ──────────────────────────────────────────────────────────
 const OUTCOME_OPTIONS = [
@@ -32,6 +34,29 @@ export type OutcomeValue = typeof OUTCOME_OPTIONS[number]['value'];
 // ─── Check if a value is "other" ─────────────────────────────────────────────
 const isOtherOutcome = (value: string): boolean => value === 'other';
 
+// ─── Helper to get today's date ────────────────────────────────────────────
+const getTodayDate = (): string => {
+  return new Date().toISOString().split('T')[0];
+};
+
+// ─── Helper to get date N days ago ─────────────────────────────────────────
+const getDateDaysAgo = (days: number): string => {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString().split('T')[0];
+};
+
+// ─── Type for API error response ────────────────────────────────────────────
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+      errors?: string[];
+    };
+  };
+  message?: string;
+}
+
 const initialCase: CaseReturnFormValues = {
   serial_number: '',
   case_number: '',
@@ -40,33 +65,28 @@ const initialCase: CaseReturnFormValues = {
   remarks: '',
 };
 
+// ─── Empty form with default values ────────────────────────────────────────
 const emptyForm: ServiceWeekFormValues = {
   station: '',
   division: '',
-  week_start: '',
-  week_end: '',
-  date: '',
+  week_start: getDateDaysAgo(7),  // ← 7 days ago as default
+  week_end: getTodayDate(),        // ← today as default
+  date: getTodayDate(),            // ← today as default
   judge_name: '',
   cases: [{ ...initialCase }],
   prepared_by: '',
   prepared_designation: '',
-  prepared_date: '',
-  confirmed_by: '',
-  confirmed_designation: '',
-  confirmed_date: '',
-  approved_by: '',
-  approved_designation: '',
-  approved_date: '',
+  prepared_date: getTodayDate(),   // ← today as default
 };
 
-// Pure mapping function — no setState involved, just data shaping.
+// ─── Pure mapping function ──────────────────────────────────────────────────
 function mapReportToFormValues(report: ServiceWeekReport): ServiceWeekFormValues {
   return {
     station: report.station,
     division: report.division || '',
-    week_start: report.week_start,
-    week_end: report.week_end,
-    date: report.date,
+    week_start: report.week_start || getDateDaysAgo(7),
+    week_end: report.week_end || getTodayDate(),
+    date: report.date || getTodayDate(),
     judge_name: report.judge_name,
     cases: report.cases.map((c) => ({
       serial_number: c.serial_number,
@@ -77,13 +97,7 @@ function mapReportToFormValues(report: ServiceWeekReport): ServiceWeekFormValues
     })),
     prepared_by: report.prepared_by,
     prepared_designation: report.prepared_designation,
-    prepared_date: report.prepared_date || '',
-    confirmed_by: report.confirmed_by || '',
-    confirmed_designation: report.confirmed_designation || '',
-    confirmed_date: report.confirmed_date || '',
-    approved_by: report.approved_by || '',
-    approved_designation: report.approved_designation || '',
-    approved_date: report.approved_date || '',
+    prepared_date: report.prepared_date || getTodayDate(),
   };
 }
 
@@ -227,47 +241,81 @@ const ServiceWeekFormInner: React.FC<{
     });
   };
 
+// src/pages/ServiceWeekForm.tsx
+
+// ... (keep all imports and helpers the same until handleSubmit)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (formData.cases.length === 0) {
-      alert('Please add at least one case');
-      return;
+    // ─── Validate required fields before anything else ──────────────────────
+    const errors: string[] = [];
+
+    if (!formData.station || !formData.station.trim()) {
+      errors.push('Station is required');
+    }
+    if (!formData.judge_name || !formData.judge_name.trim()) {
+      errors.push('Judge Name is required');
+    }
+    if (!formData.prepared_by || !formData.prepared_by.trim()) {
+      errors.push('Prepared By Name is required');
+    }
+    if (!formData.prepared_designation || !formData.prepared_designation.trim()) {
+      errors.push('Designation is required');
+    }
+    if (!formData.week_start) {
+      errors.push('Week Start is missing');
+    }
+    if (!formData.week_end) {
+      errors.push('Week End is missing');
+    }
+    if (!formData.date) {
+      errors.push('Report Date is missing');
     }
 
-    // Validate that all cases have an outcome (if "other" is selected, check it's not empty)
+    if (formData.cases.length === 0) {
+      errors.push('Please add at least one case');
+    }
+
+    // Validate that all cases have an outcome
     for (let i = 0; i < formData.cases.length; i++) {
       const c = formData.cases[i];
       if (!c.outcome || c.outcome.trim() === '') {
-        alert(`Case #${i + 1} is missing an outcome. Please select or enter an outcome.`);
-        return;
+        errors.push(`Case #${i + 1} is missing an outcome`);
       }
     }
 
-    const payload = {
-      station: formData.station,
-      division: formData.division || undefined,
-      week_start: formData.week_start,
-      week_end: formData.week_end,
-      date: formData.date,
-      judge_name: formData.judge_name,
-      cases: formData.cases.map((c) => ({
-        serial_number: Number(c.serial_number),
-        case_number: c.case_number,
-        cause_listed_activity: c.cause_listed_activity,
-        outcome: c.outcome,
-        remarks: c.remarks || undefined,
-      })),
-      prepared_by: formData.prepared_by,
-      prepared_designation: formData.prepared_designation,
-      prepared_date: formData.prepared_date || undefined,
-      confirmed_by: formData.confirmed_by || undefined,
-      confirmed_designation: formData.confirmed_designation || undefined,
-      confirmed_date: formData.confirmed_date || undefined,
-      approved_by: formData.approved_by || undefined,
-      approved_designation: formData.approved_designation || undefined,
-      approved_date: formData.approved_date || undefined,
-    };
+    if (errors.length > 0) {
+      alert(`Please fix the following issues:\n\n${errors.join('\n')}`);
+      return;
+    }
+    // ──────────────────────────────────────────────────────────────────────────
+
+// In handleSubmit, make sure week_start and week_end are never undefined:
+const payload = {
+  station: formData.station,
+  division: formData.division || undefined,
+  week_start: formData.week_start || getDateDaysAgo(7),  // ← fallback
+  week_end: formData.week_end || getTodayDate(),         // ← fallback
+  date: formData.date || getTodayDate(),                 // ← fallback
+  judge_name: formData.judge_name,
+  cases: formData.cases.map((c) => ({
+    serial_number: Number(c.serial_number),
+    case_number: c.case_number,
+    cause_listed_activity: c.cause_listed_activity,
+    outcome: c.outcome,
+    remarks: c.remarks || undefined,
+  })),
+  prepared_by: formData.prepared_by,
+  prepared_designation: formData.prepared_designation,
+  prepared_date: formData.prepared_date || undefined,
+};
+
+    // ─── Log the payload being sent ──────────────────────────────────────────
+    console.log('📤 saveAsDraft:', saveAsDraft);
+    console.log('📤 isEdit:', isEdit);
+    console.log('📤 Payload:', JSON.stringify(payload, null, 2));
+    // ──────────────────────────────────────────────────────────────────────────
 
     try {
       if (isEdit && id) {
@@ -282,9 +330,24 @@ const ServiceWeekFormInner: React.FC<{
       navigate('/staff/service-week');
     } catch (err) {
       console.error('Failed to save:', err);
-      alert('❌ Failed to save report');
+      
+      // ─── Type-safe error handling ──────────────────────────────────────
+      const apiError = err as ApiError;
+      
+      // Log the full error response if available
+      if (apiError.response?.data) {
+        console.error('Server response:', JSON.stringify(apiError.response.data, null, 2));
+        const errorMsg = apiError.response.data.message || 
+                        (apiError.response.data.errors && apiError.response.data.errors.join(', ')) ||
+                        'Failed to save report';
+        alert(`❌ ${errorMsg}`);
+      } else {
+        alert(`❌ ${apiError.message || 'Failed to save report'}`);
+      }
     }
   };
+
+
 
   const handleSaveAsDraft = () => {
     setSaveAsDraft(true);
@@ -344,29 +407,9 @@ const ServiceWeekFormInner: React.FC<{
           </div>
         </div>
 
-        {/* Dates */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div>
-            <label className="block text-xs font-semibold text-stone-700 mb-1">Week Start *</label>
-            <input
-              type="date"
-              value={formData.week_start}
-              onChange={(e) => updateField('week_start', e.target.value)}
-              required
-              className="w-full border border-stone-300 rounded-md px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-stone-700 mb-1">Week End *</label>
-            <input
-              type="date"
-              value={formData.week_end}
-              onChange={(e) => updateField('week_end', e.target.value)}
-              required
-              className="w-full border border-stone-300 rounded-md px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
+        {/* Dates - Only Report Date remains */}
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
+          <div className="max-w-xs">
             <label className="block text-xs font-semibold text-stone-700 mb-1">Report Date *</label>
             <input
               type="date"
@@ -493,11 +536,11 @@ const ServiceWeekFormInner: React.FC<{
           + Add Case
         </button>
 
-        {/* Signatures */}
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-[#9C7A1E] mt-6 mb-2">Signatures</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-3 border border-stone-200 rounded-lg">
-            <h4 className="text-sm font-semibold text-stone-700 mb-2">Prepared by (Court Assistant)</h4>
+        {/* Signatures - Only Prepared By remains */}
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-[#9C7A1E] mt-6 mb-2">Prepared By</h3>
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+          <div className="p-3 border border-stone-200 rounded-lg max-w-md">
+            <h4 className="text-sm font-semibold text-stone-700 mb-2">Court Assistant</h4>
             <div className="space-y-2">
               <input
                 type="text"
@@ -517,56 +560,6 @@ const ServiceWeekFormInner: React.FC<{
                 type="date"
                 value={formData.prepared_date}
                 onChange={(e) => updateField('prepared_date', e.target.value)}
-                className="w-full border border-stone-300 rounded-md px-2 py-1.5 text-sm"
-              />
-            </div>
-          </div>
-          <div className="p-3 border border-stone-200 rounded-lg">
-            <h4 className="text-sm font-semibold text-stone-700 mb-2">Confirmed by (Deputy Registrar)</h4>
-            <div className="space-y-2">
-              <input
-                type="text"
-                placeholder="Name"
-                value={formData.confirmed_by}
-                onChange={(e) => updateField('confirmed_by', e.target.value)}
-                className="w-full border border-stone-300 rounded-md px-2 py-1.5 text-sm"
-              />
-              <input
-                type="text"
-                placeholder="Designation"
-                value={formData.confirmed_designation}
-                onChange={(e) => updateField('confirmed_designation', e.target.value)}
-                className="w-full border border-stone-300 rounded-md px-2 py-1.5 text-sm"
-              />
-              <input
-                type="date"
-                value={formData.confirmed_date}
-                onChange={(e) => updateField('confirmed_date', e.target.value)}
-                className="w-full border border-stone-300 rounded-md px-2 py-1.5 text-sm"
-              />
-            </div>
-          </div>
-          <div className="p-3 border border-stone-200 rounded-lg">
-            <h4 className="text-sm font-semibold text-stone-700 mb-2">Approved by (Judge)</h4>
-            <div className="space-y-2">
-              <input
-                type="text"
-                placeholder="Name"
-                value={formData.approved_by}
-                onChange={(e) => updateField('approved_by', e.target.value)}
-                className="w-full border border-stone-300 rounded-md px-2 py-1.5 text-sm"
-              />
-              <input
-                type="text"
-                placeholder="Designation"
-                value={formData.approved_designation}
-                onChange={(e) => updateField('approved_designation', e.target.value)}
-                className="w-full border border-stone-300 rounded-md px-2 py-1.5 text-sm"
-              />
-              <input
-                type="date"
-                value={formData.approved_date}
-                onChange={(e) => updateField('approved_date', e.target.value)}
                 className="w-full border border-stone-300 rounded-md px-2 py-1.5 text-sm"
               />
             </div>

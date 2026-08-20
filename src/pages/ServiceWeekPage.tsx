@@ -301,7 +301,7 @@ const ServiceWeekPage: React.FC = () => {
         {/* Header Banner */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#163328] p-5 sm:p-6 rounded-2xl shadow-sm text-white gap-4">
           <div>
-            <h2 className="text-2xl font-bold font-serif tracking-tight text-[#C48B28]">Daily Service Reports</h2>
+            <h2 className="text-2xl font-bold font-serif tracking-tight text-[#C48B28]">Service Week Reports</h2>
             <p className="text-emerald-100/80 text-sm mt-1">Manage and submit your daily service week case returns</p>
           </div>
         </div>

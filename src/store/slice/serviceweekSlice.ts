@@ -170,14 +170,14 @@ const serviceWeekSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-.addCase(fetchReports.fulfilled, (state, action) => {
-  state.isLoading = false;
-  state.reports = action.payload?.data ?? [];
-  state.total = action.payload?.total ?? 0;
-  state.page = action.payload?.page ?? 1;
-  state.limit = action.payload?.limit ?? 20;
-  state.totalPages = action.payload?.totalPages ?? 0;
-})
+      .addCase(fetchReports.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.reports = action.payload?.data ?? [];
+        state.total = action.payload?.total ?? 0;
+        state.page = action.payload?.page ?? 1;
+        state.limit = action.payload?.limit ?? 20;
+        state.totalPages = action.payload?.totalPages ?? 0;
+      })
       .addCase(fetchReports.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Failed to fetch reports';
@@ -314,8 +314,6 @@ export const selectIsLoading = (state: RootState) => state.serviceWeek.isLoading
 export const selectIsSubmitting = (state: RootState) => state.serviceWeek.isSubmitting;
 export const selectError = (state: RootState) => state.serviceWeek.error;
 export const selectFilters = (state: RootState) => state.serviceWeek.filters;
-
-// ... all your selectors ...
 
 export const selectPagination = createSelector(
   [
