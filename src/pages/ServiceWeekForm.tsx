@@ -28,6 +28,7 @@ const OUTCOME_OPTIONS = [
   { value: 'settled', label: 'Settled' },
   { value: 'ruling', label: 'Ruling' },
   { value: 'taxation', label: 'Taxation' },
+  { value: 'struckout', label: 'Struck Out' },
   { value: 'other', label: 'Other' },
 ] as const;
 
