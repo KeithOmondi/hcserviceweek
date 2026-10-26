@@ -255,7 +255,7 @@ const ServiceWeekFormInner: React.FC<{
       errors.push('Station is required');
     }
     if (!formData.judge_name || !formData.judge_name.trim()) {
-      errors.push('Judge Name is required');
+      errors.push('Name is required');
     }
     if (!formData.prepared_by || !formData.prepared_by.trim()) {
       errors.push('Prepared By Name is required');
@@ -396,7 +396,7 @@ const payload = {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-stone-700 mb-1">Judge Name *</label>
+            <label className="block text-xs font-semibold text-stone-700 mb-1">DR Name *</label>
             <input
               type="text"
               value={formData.judge_name}
