@@ -26,6 +26,8 @@ const OUTCOME_OPTIONS = [
   { value: 'mention', label: 'Mention' },
   { value: 'withdrawal', label: 'Withdrawal' },
   { value: 'settled', label: 'Settled' },
+  { value: 'ruling', label: 'Ruling' },
+  { value: 'taxation', label: 'Taxation' },
   { value: 'other', label: 'Other' },
 ] as const;
 
