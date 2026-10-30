@@ -139,7 +139,7 @@ const ReportDetailView: React.FC<{ report: ServiceWeekReport }> = ({ report }) =
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <ReadOnlyField label="Station" value={report.station} />
         <ReadOnlyField label="Division" value={report.division} />
-        <ReadOnlyField label="Judge Name" value={report.judge_name} />
+        <ReadOnlyField label="DR Name" value={report.judge_name} />
       </div>
 
       {/* Dates */}
